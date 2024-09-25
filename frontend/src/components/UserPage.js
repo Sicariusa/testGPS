@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Map from './Map';
 import DriverInfo from './DriverInfo';
 import { subscribeToDriverUpdates } from '../services/socketService';
+import '../styles/UserPage.css';
 
 function UserPage() {
   const [driverLocation, setDriverLocation] = useState(null);
@@ -22,14 +23,18 @@ function UserPage() {
   }, []);
 
   return (
-    <div>
-      <h1>User View</h1>
-      {driverLocation ? (
-        <Map driverLocation={driverLocation} mapRef={mapRef} />
-      ) : (
-        <p>Waiting for driver location...</p>
-      )}
-      <DriverInfo info={driverInfo} />
+    <div className="user-page">
+      <div className="container">
+        <h1>Track Your Driver</h1>
+        <div className="tracking-container">
+          {driverLocation ? (
+            <Map driverLocation={driverLocation} mapRef={mapRef} />
+          ) : (
+            <div className="loading">Waiting for driver location...</div>
+          )}
+          <DriverInfo info={driverInfo} />
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,21 @@
+.user-page h1 {
+  text-align: center;
+  color: var(--primary-color);
+  margin-bottom: 30px;
+}
+
+.tracking-container {
+  display: flex;
+  gap: 30px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  font-size: 18px;
+  color: var(--text-color);
+}
