@@ -14,25 +14,23 @@ const io = socketIo(server, {
   }
 });
 
-// Simulated driver data
-let driverLocation = { lat: 40.7128, lng: -74.0060 };
-let direction = 1; // 1 for moving north, -1 for moving south
+let driverLocation = null;
 
-// Emit driver location updates every 5 seconds
-setInterval(() => {
-  // Simulate movement in a more predictable pattern
-  driverLocation.lat += 0.0005 * direction;
-  
-  // Change direction if we've moved too far
-  if (driverLocation.lat > 40.75 || driverLocation.lat < 40.70) {
-    direction *= -1;
-  }
-  
-  io.emit('driverUpdate', {
-    location: [driverLocation.lat, driverLocation.lng],
-    info: { name: 'John Doe', vehicle: 'Toyota Prius', eta: '10 minutes' }
+io.on('connection', (socket) => {
+  console.log('New client connected');
+
+  socket.on('driverLocation', (location) => {
+    driverLocation = location;
+    io.emit('driverUpdate', {
+      location: driverLocation,
+      info: { name: 'John Doe', vehicle: 'Toyota Prius', eta: '10 minutes' }
+    });
   });
-}, 5000);
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+});
 
 app.get('/', (req, res) => {
   res.send('Driver Tracking Server is running');
