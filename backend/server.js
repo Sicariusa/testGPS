@@ -15,30 +15,37 @@ const io = socketIo(server, {
 });
 
 let driverLocation = null;
-
-io.on('connection', (socket) => {
-  console.log('New client connected');
-
-  // Send the current driver location to the newly connected client
-  if (driverLocation) {
-    socket.emit('driverUpdate', {
-      location: driverLocation,
-      info: { name: 'John Doe', vehicle: 'Toyota Prius', eta: '10 minutes' }
+try {
+  io.on('connection', (socket) => {
+    console.log('New client connected');
+  
+    // Send a connection confirmation to the client
+    socket.emit('serverConnected');
+  
+    // Send the current driver location to the newly connected client
+    if (driverLocation) {
+      socket.emit('driverUpdate', {
+        location: driverLocation,
+        info: { name: 'John Doe', vehicle: 'Toyota Prius', eta: '10 minutes' }
+      });
+    }
+  
+    socket.on('driverLocation', (location) => {
+      driverLocation = location;
+      io.emit('driverUpdate', {
+        location: driverLocation,
+        info: { name: 'John Doe', vehicle: 'Toyota Prius', eta: '10 minutes' }
+      });
     });
-  }
-
-  socket.on('driverLocation', (location) => {
-    driverLocation = location;
-    io.emit('driverUpdate', {
-      location: driverLocation,
-      info: { name: 'John Doe', vehicle: 'Toyota Prius', eta: '10 minutes' }
+  
+    socket.on('disconnect', () => {
+      console.log('Client disconnected');
     });
   });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
-});
+  
+} catch (error) {
+  throw new Error(error);
+}
 
 app.get('/', (req, res) => {
   res.send('Driver Tracking Server is running');
