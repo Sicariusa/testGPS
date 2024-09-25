@@ -19,6 +19,14 @@ let driverLocation = null;
 io.on('connection', (socket) => {
   console.log('New client connected');
 
+  // Send the current driver location to the newly connected client
+  if (driverLocation) {
+    socket.emit('driverUpdate', {
+      location: driverLocation,
+      info: { name: 'John Doe', vehicle: 'Toyota Prius', eta: '10 minutes' }
+    });
+  }
+
   socket.on('driverLocation', (location) => {
     driverLocation = location;
     io.emit('driverUpdate', {
