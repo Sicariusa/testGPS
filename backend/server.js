@@ -81,8 +81,11 @@ try {
       };
 
       // Find nearby drivers (simplified version)
-      const nearbyDrivers = Object.keys(driverLocations);
-      console.log('Nearby drivers:', nearbyDrivers);
+      const nearbyDrivers = Object.keys(driverLocations).filter(driverId => {
+        const driver = driverLocations[driverId];
+        const distance = calculateDistance(userLocation, driver.location);
+        return distance <= 5; // 5 km radius
+      });
 
       activeRideRequests[rideId].nearbyDrivers = nearbyDrivers;
 
@@ -95,7 +98,7 @@ try {
       socket.emit('rideRequestResponse', { success: true, rideId, message: 'Ride request sent to nearby drivers' });
     });
 
-    socket.on('acceptRide', ({ rideId, driverId, driverInfo }) => {
+    socket.on('acceptRide', ({ rideId, driverId }) => {
       console.log('Ride accepted:', rideId, driverId);
       if (activeRideRequests[rideId] && activeRideRequests[rideId].status === 'pending') {
         activeRideRequests[rideId].status = 'accepted';
@@ -106,8 +109,7 @@ try {
         // Notify the user that a driver accepted
         io.to(activeRideRequests[rideId].userId).emit('rideAccepted', { 
           rideId, 
-          driverLocation: driverLocation,
-          driverInfo: driverInfo
+          driverLocation: driverLocation
         });
 
         // Notify other drivers that the ride is no longer available
