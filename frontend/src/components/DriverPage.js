@@ -13,7 +13,7 @@ function DriverPage() {
     if (isTracking) {
       watchId = navigator.geolocation.watchPosition(
         (position) => {
-          const newLocation = [position.coords.latitude, position.coords.longitude];
+          const newLocation = [position.coords.longitude, position.coords.latitude];
           setLocation(newLocation);
           emitDriverLocation(newLocation);
         },
@@ -25,6 +25,7 @@ function DriverPage() {
     }
 
     const unsubscribeRideRequests = subscribeToRideRequests((request) => {
+      console.log('Received ride request:', request);
       setRideRequests(prev => [...prev, request]);
     });
 
@@ -43,6 +44,19 @@ function DriverPage() {
 
   const toggleTracking = () => {
     setIsTracking(!isTracking);
+    if (!isTracking) {
+      // When starting tracking, emit the initial location
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newLocation = [position.coords.longitude, position.coords.latitude];
+          setLocation(newLocation);
+          emitDriverLocation(newLocation);
+        },
+        (error) => {
+          console.error("Error getting initial location:", error);
+        }
+      );
+    }
   };
 
   const handleAcceptRide = (rideId) => {
@@ -66,19 +80,23 @@ function DriverPage() {
         {location && (
           <div className="location">
             <h2>Current Location</h2>
-            <p>Latitude: {location[0]}</p>
-            <p>Longitude: {location[1]}</p>
+            <p>Latitude: {location[1]}</p>
+            <p>Longitude: {location[0]}</p>
           </div>
         )}
         <div className="ride-requests">
           <h2>Ride Requests</h2>
-          {rideRequests.map((request) => (
-            <div key={request.rideId} className="ride-request">
-              <p>From: {request.userLocation.join(', ')}</p>
-              <p>To: {request.destination}</p>
-              <button onClick={() => handleAcceptRide(request.rideId)}>Accept Ride</button>
-            </div>
-          ))}
+          {rideRequests.length === 0 ? (
+            <p>No ride requests at the moment.</p>
+          ) : (
+            rideRequests.map((request) => (
+              <div key={request.rideId} className="ride-request">
+                <p>From: {request.userLocation.join(', ')}</p>
+                <p>To: {request.destination.join(', ')}</p>
+                <button onClick={() => handleAcceptRide(request.rideId)}>Accept Ride</button>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

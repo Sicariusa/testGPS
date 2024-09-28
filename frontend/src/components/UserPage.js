@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Map from './Map';
 import DriverInfo from './DriverInfo';
+import LocationSearch from './LocationSearch';
 import { subscribeToDriverUpdates, subscribeToServerConnection, requestRide, subscribeToRideAccepted } from '../services/socketService';
 import '../styles/UserPage.css';
 
@@ -9,13 +10,12 @@ function UserPage() {
   const [driverInfo, setDriverInfo] = useState(null);
   const [isServerConnected, setIsServerConnected] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
-  const [destination, setDestination] = useState('');
+  const [destination, setDestination] = useState(null);
   const [rideStatus, setRideStatus] = useState('idle');
-  const mapRef = useRef(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      (position) => setUserLocation([position.coords.latitude, position.coords.longitude]),
+      (position) => setUserLocation([position.coords.longitude, position.coords.latitude]),
       (error) => console.error("Error getting user location:", error)
     );
 
@@ -44,7 +44,7 @@ function UserPage() {
   const handleRequestRide = () => {
     if (userLocation && destination) {
       setRideStatus('requesting');
-      requestRide('user123', userLocation, destination)
+      requestRide('user123', userLocation, destination.coordinates)
         .then(response => {
           console.log(response);
           setRideStatus('waiting');
@@ -56,6 +56,14 @@ function UserPage() {
     }
   };
 
+  const handleLocationSelect = (location) => {
+    setDestination(location);
+  };
+
+  const handleCancelDestination = () => {
+    setDestination(null);
+  };
+
   return (
     <div className="user-page">
       <div className="container">
@@ -65,20 +73,20 @@ function UserPage() {
         )}
         <div className="tracking-container">
           {isServerConnected ? (
-            <Map userLocation={userLocation} driverLocation={driverLocation} />
+            <Map 
+              userLocation={userLocation} 
+              driverLocation={driverLocation} 
+              destination={destination ? destination.coordinates : null}
+            />
           ) : (
             <div className="loading">Waiting for server connection...</div>
           )}
           <DriverInfo info={driverInfo} />
         </div>
         <div className="ride-request">
-          <input 
-            type="text" 
-            placeholder="Enter destination" 
-            value={destination} 
-            onChange={(e) => setDestination(e.target.value)}
-          />
-          <button onClick={handleRequestRide} disabled={rideStatus !== 'idle'}>
+          <LocationSearch onLocationSelect={handleLocationSelect} onCancelDestination={handleCancelDestination} />
+          {destination && <p>Selected destination: {destination.name}</p>}
+          <button onClick={handleRequestRide} disabled={rideStatus !== 'idle' || !destination}>
             {rideStatus === 'idle' ? 'Request Ride' : 
              rideStatus === 'requesting' ? 'Requesting...' : 
              rideStatus === 'waiting' ? 'Waiting for driver...' : 
