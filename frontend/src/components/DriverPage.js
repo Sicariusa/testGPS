@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { emitDriverLocation } from '../services/socketService';
+import { emitDriverLocation, subscribeToRideRequests, acceptRide, subscribeToRideUnavailable } from '../services/socketService';
 import '../styles/DriverPage.css';
 
 function DriverPage() {
   const [location, setLocation] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
+  const [rideRequests, setRideRequests] = useState([]);
 
   useEffect(() => {
     let watchId;
@@ -23,15 +24,30 @@ function DriverPage() {
       );
     }
 
+    const unsubscribeRideRequests = subscribeToRideRequests((request) => {
+      setRideRequests(prev => [...prev, request]);
+    });
+
+    const unsubscribeRideUnavailable = subscribeToRideUnavailable(({ rideId }) => {
+      setRideRequests(prev => prev.filter(req => req.rideId !== rideId));
+    });
+
     return () => {
       if (watchId) {
         navigator.geolocation.clearWatch(watchId);
       }
+      unsubscribeRideRequests();
+      unsubscribeRideUnavailable();
     };
   }, [isTracking]);
 
   const toggleTracking = () => {
     setIsTracking(!isTracking);
+  };
+
+  const handleAcceptRide = (rideId) => {
+    acceptRide(rideId, 'driver123');
+    setRideRequests(prev => prev.filter(req => req.rideId !== rideId));
   };
 
   return (
@@ -54,6 +70,16 @@ function DriverPage() {
             <p>Longitude: {location[1]}</p>
           </div>
         )}
+        <div className="ride-requests">
+          <h2>Ride Requests</h2>
+          {rideRequests.map((request) => (
+            <div key={request.rideId} className="ride-request">
+              <p>From: {request.userLocation.join(', ')}</p>
+              <p>To: {request.destination}</p>
+              <button onClick={() => handleAcceptRide(request.rideId)}>Accept Ride</button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
