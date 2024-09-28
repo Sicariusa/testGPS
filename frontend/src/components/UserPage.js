@@ -4,6 +4,7 @@ import DriverInfo from './DriverInfo';
 import LocationSearch from './LocationSearch';
 import { subscribeToDriverUpdates, subscribeToServerConnection, requestRide, subscribeToRideAccepted } from '../services/socketService';
 import '../styles/UserPage.css';
+import { calculateETA } from '../utils';
 
 function UserPage() {
   const [driverLocation, setDriverLocation] = useState(null);
@@ -12,6 +13,7 @@ function UserPage() {
   const [userLocation, setUserLocation] = useState(null);
   const [destination, setDestination] = useState(null);
   const [rideStatus, setRideStatus] = useState('idle');
+  const [eta, setEta] = useState(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -23,6 +25,10 @@ function UserPage() {
       console.log('Received driver update:', data);
       setDriverLocation(data.location);
       setDriverInfo(data.info);
+      if (userLocation && data.location) {
+        const estimatedEta = calculateETA(userLocation, data.location);
+        setEta(estimatedEta);
+      }
     });
 
     const unsubscribeServerConnection = subscribeToServerConnection(() => {
@@ -32,6 +38,14 @@ function UserPage() {
     const unsubscribeRideAccepted = subscribeToRideAccepted((data) => {
       setRideStatus('accepted');
       setDriverLocation(data.driverLocation);
+      setDriverInfo({
+        name: data.driverInfo.name,
+        vehicle: data.driverInfo.vehicle
+      });
+      if (userLocation && data.driverLocation) {
+        const estimatedEta = calculateETA(userLocation, data.driverLocation);
+        setEta(estimatedEta);
+      }
     });
 
     return () => {
@@ -39,7 +53,7 @@ function UserPage() {
       unsubscribeServerConnection();
       unsubscribeRideAccepted();
     };
-  }, []);
+  }, [userLocation]);
 
   const handleRequestRide = () => {
     if (userLocation && destination) {
@@ -81,7 +95,7 @@ function UserPage() {
           ) : (
             <div className="loading">Waiting for server connection...</div>
           )}
-          <DriverInfo info={driverInfo} />
+          <DriverInfo info={driverInfo} eta={eta} />
         </div>
         <div className="ride-request">
           <LocationSearch onLocationSelect={handleLocationSelect} onCancelDestination={handleCancelDestination} />
@@ -92,6 +106,9 @@ function UserPage() {
              rideStatus === 'waiting' ? 'Waiting for driver...' : 
              'Driver on the way'}
           </button>
+          {rideStatus === 'accepted' && eta && (
+            <p>Driver has accepted your ride! ETA: {eta} minutes</p>
+          )}
         </div>
       </div>
     </div>

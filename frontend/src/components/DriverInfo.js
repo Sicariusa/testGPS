@@ -1,6 +1,6 @@
 import React from 'react';
 
-function DriverInfo({ info }) {
+function DriverInfo({ info, eta }) {
   if (!info) return null;
 
   return (
@@ -8,7 +8,7 @@ function DriverInfo({ info }) {
       <h2>Driver Information</h2>
       <p>Name: {info.name}</p>
       <p>Vehicle: {info.vehicle}</p>
-      <p>ETA: {info.eta}</p>
+      {eta && <p>ETA: {eta} minutes</p>}
     </div>
   );
 }

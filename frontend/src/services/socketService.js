@@ -12,8 +12,13 @@ export const subscribeToDriverUpdates = (callback) => {
 };
 
 export const subscribeToRideRequests = (callback) => {
-  socket.on('rideRequest', callback);
-  return () => socket.off('rideRequest', callback);
+  console.log('Subscribing to ride requests');
+  socket.off('rideRequest'); // Remove any existing listeners
+  socket.on('rideRequest', (request) => {
+    console.log('Ride request received in socketService:', request);
+    callback(request);
+  });
+  return () => socket.off('rideRequest');
 };
 
 export const requestRide = (userId, userLocation, destination) => {
@@ -29,8 +34,8 @@ export const requestRide = (userId, userLocation, destination) => {
   });
 };
 
-export const acceptRide = (rideId, driverId) => {
-  socket.emit('acceptRide', { rideId, driverId });
+export const acceptRide = (rideId, driverId, driverInfo) => {
+  socket.emit('acceptRide', { rideId, driverId, driverInfo });
 };
 
 export const subscribeToRideAccepted = (callback) => {

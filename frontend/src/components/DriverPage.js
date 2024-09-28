@@ -24,23 +24,34 @@ function DriverPage() {
       );
     }
 
-    const unsubscribeRideRequests = subscribeToRideRequests((request) => {
-      console.log('Received ride request:', request);
-      setRideRequests(prev => [...prev, request]);
-    });
+    return () => {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [isTracking]);
 
+  useEffect(() => {
+    const handleRideRequest = (request) => {
+      console.log('Received ride request:', request);
+      setRideRequests(prev => {
+        if (!prev.some(r => r.rideId === request.rideId)) {
+          return [...prev, request];
+        }
+        return prev;
+      });
+    };
+
+    const unsubscribeRideRequests = subscribeToRideRequests(handleRideRequest);
     const unsubscribeRideUnavailable = subscribeToRideUnavailable(({ rideId }) => {
       setRideRequests(prev => prev.filter(req => req.rideId !== rideId));
     });
 
     return () => {
-      if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
-      }
       unsubscribeRideRequests();
       unsubscribeRideUnavailable();
     };
-  }, [isTracking]);
+  }, []);
 
   const toggleTracking = () => {
     setIsTracking(!isTracking);
@@ -60,7 +71,11 @@ function DriverPage() {
   };
 
   const handleAcceptRide = (rideId) => {
-    acceptRide(rideId, 'driver123');
+    const driverInfo = {
+      name: 'John Doe', // Replace with actual driver name
+      vehicle: 'Toyota Camry' // Replace with actual vehicle info
+    };
+    acceptRide(rideId, 'driver123', driverInfo);
     setRideRequests(prev => prev.filter(req => req.rideId !== rideId));
   };
 
