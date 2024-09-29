@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { emitDriverLocation, subscribeToRideRequests, acceptRide, subscribeToRideUnavailable } from '../services/socketService';
+import { emitDriverLocation, subscribeToRideRequests, acceptRide, subscribeToRideUnavailable, subscribeToRideAcceptedConfirmation } from '../services/socketService';
 import '../styles/DriverPage.css';
 
 function DriverPage() {
   const [location, setLocation] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
   const [rideRequests, setRideRequests] = useState([]);
+  const [eta, setEta] = useState(null);
 
   useEffect(() => {
     let watchId;
@@ -50,6 +51,21 @@ function DriverPage() {
     return () => {
       unsubscribeRideRequests();
       unsubscribeRideUnavailable();
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleRideAcceptedConfirmation = (data) => {
+      setEta({
+        toUser: data.etaToUser,
+        toDestination: data.etaToDestination
+      });
+    };
+
+    const unsubscribeRideAcceptedConfirmation = subscribeToRideAcceptedConfirmation(handleRideAcceptedConfirmation);
+
+    return () => {
+      unsubscribeRideAcceptedConfirmation();
     };
   }, []);
 
@@ -113,6 +129,13 @@ function DriverPage() {
             ))
           )}
         </div>
+        {eta && (
+          <div className="eta-info">
+            <h3>Current Ride ETAs:</h3>
+            <p>ETA to user: {eta.toUser} minutes</p>
+            <p>ETA to destination: {eta.toDestination} minutes</p>
+          </div>
+        )}
       </div>
     </div>
   );

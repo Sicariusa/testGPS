@@ -8,7 +8,7 @@ function DriverInfo({ info, eta }) {
       <h2>Driver Information</h2>
       <p>Name: {info.name}</p>
       <p>Vehicle: {info.vehicle}</p>
-      {eta && <p>ETA: {eta} minutes</p>}
+      {eta && <p>ETA: {eta.toUser} minutes to user, {eta.toDestination} minutes to destination</p>}
     </div>
   );
 }

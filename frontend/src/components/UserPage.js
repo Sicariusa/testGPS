@@ -42,10 +42,10 @@ function UserPage() {
         name: data.driverInfo.name,
         vehicle: data.driverInfo.vehicle
       });
-      if (userLocation && data.driverLocation) {
-        const estimatedEta = calculateETA(userLocation, data.driverLocation);
-        setEta(estimatedEta);
-      }
+      setEta({
+        toUser: data.etaToUser,
+        toDestination: data.etaToDestination
+      });
     });
 
     return () => {
@@ -58,7 +58,7 @@ function UserPage() {
   const handleRequestRide = () => {
     if (userLocation && destination) {
       setRideStatus('requesting');
-      requestRide('user123', userLocation, destination.coordinates)
+      requestRide('user123', userLocation, destination.coordinates) // Ensure destination.coordinates is correct
         .then(response => {
           console.log(response);
           setRideStatus('waiting');
@@ -71,6 +71,7 @@ function UserPage() {
   };
 
   const handleLocationSelect = (location) => {
+    // Assuming location has a structure like { name: 'Location Name', coordinates: [longitude, latitude] }
     setDestination(location);
   };
 
@@ -107,7 +108,11 @@ function UserPage() {
              'Driver on the way'}
           </button>
           {rideStatus === 'accepted' && eta && (
-            <p>Driver has accepted your ride! ETA: {eta} minutes</p>
+            <div>
+              <p>Driver has accepted your ride!</p>
+              <p>ETA to your location: {eta.toUser} minutes</p>
+              <p>ETA to destination: {eta.toDestination} minutes</p>
+            </div>
           )}
         </div>
       </div>

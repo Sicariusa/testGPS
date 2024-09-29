@@ -52,3 +52,8 @@ export const subscribeToServerConnection = (callback) => {
   socket.on('connect', callback);
   return () => socket.off('connect', callback);
 };
+
+export const subscribeToRideAcceptedConfirmation = (callback) => {
+  socket.on('rideAcceptedConfirmation', callback);
+  return () => socket.off('rideAcceptedConfirmation', callback);
+};
